@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arabic Learning Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink:        #1A1A2E;
+    --parchment:  #F5EDD6;
+    --cream:      #FBF7EE;
+    --gold:       #C9A84C;
+    --gold-light: #E8D5A3;
+    --green:      #4A7C59;
+    --green-light:#D4E8DA;
+    --red:        #B83232;
+    --red-light:  #F5DADA;
+    --blue:       #2C5F8A;
+    --blue-light: #D4E4F0;
+    --amber:      #B8700A;
+    --amber-light:#FDF3DC;
+    --muted:      #6B6B7B;
+    --border:     #DDD5C0;
+  }
+
+  body { background: var(--cream); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink); padding: 22px 24px 16px; text-align: center;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  header h1 { font-family: 'Amiri', serif; font-size: 24px; color: var(--gold); }
+  header p  { color: var(--gold-light); font-size: 11px; margin-top: 3px; opacity: 0.75; }
+  .hstats   { display: flex; justify-content: center; gap: 28px; margin-top: 11px; }
+  .snum     { font-size: 20px; font-weight: 600; color: var(--gold); }
+  .slbl     { font-size: 10px; color: var(--gold-light); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── MAIN ── */
+  main { max-width: 700px; margin: 0 auto; padding: 20px 12px 70px; }
+
+  /* ── WEEK ── */
+  .week { margin-bottom: 26px; }
+  .wk-head { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .wk-lbl  { font-family: 'Amiri', serif; font-size: 17px; font-weight: 700; white-space: nowrap; }
+  .wk-track{ flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .wk-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--green)); border-radius: 2px; transition: width 0.4s; }
+  .wk-pct  { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+  /* ── DAY CARD ── */
+  .day-card { background: white; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 7px; overflow: hidden; }
+  .day-card.today    { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-light); }
+  .day-card.all-done { border-color: var(--green); }
+
+  .day-head {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 12px; background: var(--parchment); border-bottom: 1px solid var(--border);
+  }
+  .day-name { font-weight: 600; font-size: 13px; min-width: 28px; }
+  .day-date { font-size: 12px; color: var(--muted); flex: 1; }
+  .badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .badge-today { background: var(--gold); color: white; }
+  .badge-done  { background: var(--green); color: white; }
+
+  /* ── TASK ROWS ── */
+  .day-body { padding: 7px 10px; display: flex; flex-direction: column; gap: 4px; }
+
+  .task-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 7px; border: 1px solid transparent;
+  }
+  .task-row.done-row   { background: #F7FBF8; }
+  .task-row.carried-row{ background: var(--amber-light); border-color: #E8CFA0; }
+
+  /* ── LEFT TICK (done) ── */
+  .cb-done {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; cursor: pointer;
+    border: 2px solid var(--border); background: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 12px; font-weight: 700; color: transparent;
+  }
+  .cb-done.on { background: var(--green); border-color: var(--green); color: white; }
+
+  /* ── PILL ── */
+  .pill {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 4px; flex-shrink: 0; min-width: 64px; text-align: center;
+  }
+  .pill.watch    { background: var(--blue-light);  color: var(--blue); }
+  .pill.memorise { background: var(--red-light);   color: var(--red); }
+  .pill.review   { background: var(--green-light); color: var(--green); }
+
+
+  /* ── LABEL ── */
+  .task-lbl { font-size: 13px; flex: 1; line-height: 1.3; }
+  .done-row .task-lbl { text-decoration: line-through; color: var(--muted); }
+
+  /* ── RIGHT TICK (incomplete) ── */
+  .cb-inc {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; cursor: pointer;
+    border: 2px solid #E8B0B0; background: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 12px; font-weight: 700; color: transparent;
+  }
+  .cb-inc.on { background: var(--red); border-color: var(--red); color: white; }
+  /* tooltip */
+  .cb-inc[title] { position: relative; }
+
+  /* ── RESET ── */
+  .reset-btn {
+    position: fixed; bottom: 16px; right: 16px; background: var(--ink); color: var(--gold);
+    border: none; border-radius: 8px; padding: 9px 15px; font-size: 12px;
+    font-family: 'Inter', sans-serif; cursor: pointer; opacity: 0.6; transition: opacity 0.2s;
+  }
+  .reset-btn:hover { opacity: 1; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--parchment); border-radius: 8px;
+    margin-bottom: 18px; font-size: 11px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-cb { width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .legend-green { background: var(--green); color: white; border: 2px solid var(--green); }
+  .legend-red   { background: var(--red);   color: white; border: 2px solid var(--red); }
+  .legend-empty-g { background: white; border: 2px solid var(--border); }
+  .legend-empty-r { background: white; border: 2px solid #E8B0B0; }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 20px; }
+    .pill { min-width: 54px; font-size: 9px; }
+    .task-lbl { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Arabic Learning Schedule</h1>
+  <p>Watch · Memorise · Review — 7 weeks, 25 lessons</p>
+  <div class="hstats">
+    <div><div class="snum" id="s-done">0</div><div class="slbl">Done</div></div>
+    <div><div class="snum" id="s-total">0</div><div class="slbl">Tasks</div></div>
+    <div><div class="snum" id="s-pct">0%</div><div class="slbl">Complete</div></div>
+  </div>
+</header>
+
+<main id="schedule">
+  <div class="legend">
+    <strong style="color:var(--ink)">Key:</strong>
+    <div class="legend-item"><div class="legend-cb legend-empty-g"></div> Tick done</div>
+    <div class="legend-item"><div class="legend-cb legend-green">✓</div> Completed</div>
+    <div class="legend-item"><div class="legend-cb legend-empty-r"></div> Tick incomplete</div>
+    <div class="legend-item"><div class="legend-cb legend-red">✕</div> Carried to next day</div>
+  </div>
+</main>
+
+<button class="reset-btn" onclick="resetAll()">Reset All</button>
+
+<script>
+// ── SCHEDULE ─────────────────────────────────────────────────────────────────
+const SCHEDULE = [
+  // WEEK 1
+  { date:"2026-06-12", day:"Fri", watch:"Lesson 1",  mem:null,        rev:[] },
+  { date:"2026-06-13", day:"Sat", watch:null,         mem:"Lesson 1",  rev:[] },
+  { date:"2026-06-14", day:"Sun", watch:"Lesson 2",  mem:null,        rev:["L1"] },
+  { date:"2026-06-15", day:"Mon", watch:"Lesson 3",  mem:"Lesson 2",  rev:[] },
+  { date:"2026-06-16", day:"Tue", watch:null,         mem:"Lesson 3",  rev:["L1","L2"] },
+  { date:"2026-06-17", day:"Wed", watch:"Lesson 4",  mem:null,        rev:["L3"] },
+  { date:"2026-06-18", day:"Thu", watch:null,         mem:"Lesson 4",  rev:["L1","L2","L3"] },
+  // WEEK 2
+  { date:"2026-06-19", day:"Fri", watch:"Lesson 5",  mem:null,        rev:["L4"] },
+  { date:"2026-06-20", day:"Sat", watch:null,         mem:"Lesson 5",  rev:["L2","L4"] },
+  { date:"2026-06-21", day:"Sun", watch:"Lesson 6",  mem:null,        rev:["L1","L3","L5"] },
+  { date:"2026-06-22", day:"Mon", watch:"Lesson 7",  mem:"Lesson 6",  rev:[] },
+  { date:"2026-06-23", day:"Tue", watch:null,         mem:"Lesson 7",  rev:["L4","L6"] },
+  { date:"2026-06-24", day:"Wed", watch:"Lesson 8",  mem:null,        rev:["L2","L5","L7"] },
+  { date:"2026-06-25", day:"Thu", watch:null,         mem:"Lesson 8",  rev:["L1","L2","L3","L4","L5","L6","L7"] },
+  // WEEK 3
+  { date:"2026-06-26", day:"Fri", watch:"Lesson 9",  mem:null,        rev:["L3","L8"] },
+  { date:"2026-06-27", day:"Sat", watch:null,         mem:"Lesson 9",  rev:["L6","L8"] },
+  { date:"2026-06-28", day:"Sun", watch:"Lesson 10", mem:null,        rev:["L1","L4","L9"] },
+  { date:"2026-06-29", day:"Mon", watch:"Lesson 11", mem:"Lesson 10", rev:["L5"] },
+  { date:"2026-06-30", day:"Tue", watch:null,         mem:"Lesson 11", rev:["L2","L7","L10"] },
+  { date:"2026-07-01", day:"Wed", watch:"Lesson 12", mem:null,        rev:["L6","L8","L11"] },
+  { date:"2026-07-02", day:"Thu", watch:null,         mem:"Lesson 12", rev:["L1","L2","L3","L4","L5","L6","L7","L8","L9","L10","L11"] },
+  // WEEK 4
+  { date:"2026-07-03", day:"Fri", watch:"Lesson 13", mem:null,        rev:["L3","L9","L12"] },
+  { date:"2026-07-04", day:"Sat", watch:null,         mem:"Lesson 13", rev:["L4","L10","L12"] },
+  { date:"2026-07-05", day:"Sun", watch:"Lesson 14", mem:null,        rev:["L1","L5","L11","L13"] },
+  { date:"2026-07-06", day:"Mon", watch:"Lesson 15", mem:"Lesson 14", rev:["L6","L12"] },
+  { date:"2026-07-07", day:"Tue", watch:null,         mem:"Lesson 15", rev:["L2","L7","L13","L14"] },
+  { date:"2026-07-08", day:"Wed", watch:"Lesson 16", mem:null,        rev:["L8","L15"] },
+  { date:"2026-07-09", day:"Thu", watch:null,         mem:"Lesson 16", rev:["L1","L2","L3","L4","L5","L6","L7","L8","L9","L10","L11","L12","L13","L14","L15"] },
+  // WEEK 5
+  { date:"2026-07-10", day:"Fri", watch:"Lesson 17", mem:null,        rev:["L3","L9","L16"] },
+  { date:"2026-07-11", day:"Sat", watch:null,         mem:"Lesson 17", rev:["L4","L10","L14","L16"] },
+  { date:"2026-07-12", day:"Sun", watch:"Lesson 18", mem:null,        rev:["L1","L5","L11","L15","L17"] },
+  { date:"2026-07-13", day:"Mon", watch:"Lesson 19", mem:"Lesson 18", rev:["L6","L12","L16"] },
+  { date:"2026-07-14", day:"Tue", watch:null,         mem:"Lesson 19", rev:["L2","L7","L13","L18"] },
+  { date:"2026-07-15", day:"Wed", watch:"Lesson 20", mem:null,        rev:["L8","L14","L19"] },
+  { date:"2026-07-16", day:"Thu", watch:null,         mem:"Lesson 20", rev:["L1","L2","L3","L4","L5","L6","L7","L8","L9","L10","L11","L12","L13","L14","L15","L16","L17","L18","L19"] },
+  // WEEK 6
+  { date:"2026-07-17", day:"Fri", watch:"Lesson 21", mem:null,        rev:["L3","L9","L15","L20"] },
+  { date:"2026-07-18", day:"Sat", watch:null,         mem:"Lesson 21", rev:["L4","L10","L16","L20"] },
+  { date:"2026-07-19", day:"Sun", watch:"Lesson 22", mem:null,        rev:["L5","L11","L17","L21"] },
+  { date:"2026-07-20", day:"Mon", watch:"Lesson 23", mem:"Lesson 22", rev:["L6","L12","L18"] },
+  { date:"2026-07-21", day:"Tue", watch:null,         mem:"Lesson 23", rev:["L1","L7","L13","L19","L22"] },
+  { date:"2026-07-22", day:"Wed", watch:"Lesson 24", mem:null,        rev:["L2","L8","L14","L20","L23"] },
+  { date:"2026-07-23", day:"Thu", watch:null,         mem:"Lesson 24", rev:["L1","L2","L3","L4","L5","L6","L7","L8","L9","L10","L11","L12","L13","L14","L15","L16","L17","L18","L19","L20","L21","L22","L23"] },
+  // WEEK 7
+  { date:"2026-07-24", day:"Fri", watch:"Lesson 25", mem:null,        rev:["L9","L15","L21","L24"] },
+  { date:"2026-07-25", day:"Sat", watch:null,         mem:"Lesson 25", rev:["L10","L16","L22","L24"] },
+  { date:"2026-07-26", day:"Sun", watch:null,         mem:null,        rev:["L11","L17","L23","L25"] },
+  { date:"2026-07-27", day:"Mon", watch:null,         mem:null,        rev:["L12","L13","L14","L18","L19","L20","L24","L25"] },
+  { date:"2026-07-28", day:"Tue", watch:null,         mem:null,        rev:["L1","L2","L3","L4","L5","L6","L7","L8","L9"] },
+  { date:"2026-07-29", day:"Wed", watch:null,         mem:null,        rev:["L10","L11","L12","L13","L14","L15","L16","L17"] },
+  { date:"2026-07-30", day:"Thu", watch:null,         mem:null,        rev:["L18","L19","L20","L21","L22","L23","L24","L25"] },
+];
+
+const WEEK_LABELS = [
+  "Week 1 — 12–18 Jun","Week 2 — 19–25 Jun","Week 3 — 26 Jun – 2 Jul",
+  "Week 4 — 3–9 Jul","Week 5 — 10–16 Jul","Week 6 — 17–23 Jul","Week 7 — 24–30 Jul",
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+// state[date] = {
+//   watch: bool, mem: bool,
+//   rev: { L1: bool, ... },
+//   inc: { watch: bool, mem: bool, L1: bool, ... },   // "marked incomplete"
+//   carried: [ { id, type, label, fromDate, done, markedInc } ]
+// }
+const KEY = "arabic_v4";
+let state = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })();
+const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+
+function ds(date) {
+  if (!state[date]) state[date] = { watch:false, mem:false, rev:{}, inc:{}, carried:[] };
+  const d = state[date];
+  if (!d.rev)     d.rev     = {};
+  if (!d.inc)     d.inc     = {};
+  if (!d.carried) d.carried = [];
+  return d;
+}
+
+function todayStr() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+}
+
+function nextDate(date) {
+  const idx = SCHEDULE.findIndex(d => d.date === date);
+  return (idx >= 0 && idx < SCHEDULE.length - 1) ? SCHEDULE[idx + 1].date : null;
+}
+
+function fmtDate(d) {
+  const [y,m,dd] = d.split('-').map(Number);
+  return new Date(y, m-1, dd).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+
+// Toggle done tick (left box) for a scheduled task
+function tickDone(date, type, revKey) {
+  const d = ds(date);
+  if (type === 'watch') d.watch = !d.watch;
+  else if (type === 'mem') d.mem = !d.mem;
+  else if (type === 'rev') d.rev[revKey] = !d.rev[revKey];
+  // If marking done, clear any incomplete flag
+  const k = revKey || type;
+  if (getTaskDone(d, type, revKey)) d.inc[k] = false;
+  save(); render();
+}
+
+// Toggle incomplete tick (right box) for a scheduled task
+// When ticked: carry to next day. When un-ticked: remove the carry.
+function tickInc(date, type, revKey, label) {
+  const d = ds(date);
+  const k = revKey || type;
+  const wasInc = !!d.inc[k];
+
+  if (!wasInc) {
+    // Mark incomplete: ensure done is false, add carry
+    if (type === 'watch') d.watch = false;
+    else if (type === 'mem') d.mem = false;
+    else if (type === 'rev') d.rev[revKey] = false;
+    d.inc[k] = true;
+
+    const next = nextDate(date);
+    if (next) {
+      const nd = ds(next);
+      const id = `${date}-${type}-${label}`;
+      if (!nd.carried.find(c => c.id === id)) {
+        nd.carried.push({ id, type, label, fromDate: date, done: false, markedInc: false });
+      }
+    }
+  } else {
+    // Un-mark incomplete: remove the carry from next day too
+    d.inc[k] = false;
+    const next = nextDate(date);
+    if (next) {
+      const nd = ds(next);
+      const id = `${date}-${type}-${label}`;
+      nd.carried = nd.carried.filter(c => c.id !== id);
+    }
+  }
+  save(); render();
+}
+
+// Toggle done for a carried task
+function tickCarriedDone(date, id) {
+  const d = ds(date);
+  const c = d.carried.find(x => x.id === id);
+  if (!c) return;
+  c.done = !c.done;
+  if (c.done) c.markedInc = false;
+  save(); render();
+}
+
+// Toggle incomplete for a carried task → push further
+function tickCarriedInc(date, id) {
+  const d = ds(date);
+  const c = d.carried.find(x => x.id === id);
+  if (!c) return;
+
+  const wasInc = !!c.markedInc;
+  if (!wasInc) {
+    c.done = false;
+    c.markedInc = true;
+    const next = nextDate(date);
+    if (next) {
+      const nd = ds(next);
+      if (!nd.carried.find(x => x.id === c.id)) {
+        nd.carried.push({ ...c, done: false, markedInc: false });
+      }
+    }
+    // Remove from current
+    d.carried = d.carried.filter(x => x.id !== id);
+  } else {
+    c.markedInc = false;
+  }
+  save(); render();
+}
+
+function getTaskDone(d, type, revKey) {
+  if (type === 'watch') return d.watch;
+  if (type === 'mem')   return d.mem;
+  if (type === 'rev')   return !!d.rev[revKey];
+  return false;
+}
+
+function resetAll() {
+  if (!confirm("Reset all progress?")) return;
+  state = {}; save(); render();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function taskRow(date, type, revKey, label, done, isInc, isCarried, carriedId) {
+  const pillType = type === 'mem' ? 'memorise' : type;
+  const rowClass = isCarried ? 'task-row carried-row' : (done ? 'task-row done-row' : 'task-row');
+
+  const leftOn  = done  ? 'on' : '';
+  const rightOn = isInc ? 'on' : '';
+
+  const leftTick  = isCarried
+    ? `<div class="cb-done ${leftOn}" onclick="tickCarriedDone('${date}','${carriedId}')">✓</div>`
+    : `<div class="cb-done ${leftOn}" onclick="tickDone('${date}','${type}',${revKey ? `'${revKey}'` : 'null'})">✓</div>`;
+
+  const rightTick = isCarried
+    ? `<div class="cb-inc ${rightOn}" title="Mark incomplete — carry to next day" onclick="tickCarriedInc('${date}','${carriedId}')">✕</div>`
+    : `<div class="cb-inc ${rightOn}" title="Mark incomplete — carry to next day" onclick="tickInc('${date}','${type}',${revKey ? `'${revKey}'` : 'null'},'${label}')">✕</div>`;
+
+  const pillLabel = pillType; // always use the task's actual type for styling
+  const pill = `<span class="pill ${pillLabel}">${pillType}</span>`;
+
+  // Review labels: "L3" → "Lesson 3", normal text
+  let displayLabel = label;
+  if (type === 'rev' || isCarried) {
+    displayLabel = label.replace(/^L(\d+)$/, 'Lesson $1');
+  }
+
+  const carriedTag = isCarried ? ' <em style="font-size:11px;color:var(--amber);font-weight:400">carried</em>' : '';
+
+  return `<div class="${rowClass}">
+    ${leftTick}
+    ${pill}
+    <span class="task-lbl">${displayLabel}${carriedTag}</span>
+    ${rightTick}
+  </div>`;
+}
+
+function render() {
+  const now = todayStr();
+  // Clear everything except legend
+  const wrap = document.getElementById('schedule');
+  // Keep legend (first child), remove rest
+  while (wrap.children.length > 1) wrap.removeChild(wrap.lastChild);
+
+  let totalTasks = 0, doneTasks = 0;
+
+  SCHEDULE.forEach((day, i) => {
+    const d = ds(day.date);
+    const isToday = day.date === now;
+    const weekIdx = Math.floor(i / 7);
+
+    // Week container
+    if (i % 7 === 0) {
+      const w = document.createElement('div');
+      w.className = 'week'; w.id = `wk-${weekIdx}`;
+      w.innerHTML = `<div class="wk-head">
+        <span class="wk-lbl">${WEEK_LABELS[weekIdx]}</span>
+        <div class="wk-track"><div class="wk-fill" id="wf-${weekIdx}" style="width:0"></div></div>
+        <span class="wk-pct" id="wp-${weekIdx}">0%</span>
+      </div>`;
+      wrap.appendChild(w);
+    }
+    const wkEl = document.getElementById(`wk-${weekIdx}`);
+
+    // Tally
+    let dTotal = 0, dDone = 0;
+    const taskRows = [];
+
+    // Watch
+    if (day.watch) {
+      dTotal++; totalTasks++;
+      const done = !!d.watch;
+      const inc  = !!d.inc['watch'];
+      if (done) { dDone++; doneTasks++; }
+      taskRows.push(taskRow(day.date, 'watch', null, day.watch, done, inc, false, null));
+    }
+    // Memorise
+    if (day.mem) {
+      dTotal++; totalTasks++;
+      const done = !!d.mem;
+      const inc  = !!d.inc['mem'];
+      if (done) { dDone++; doneTasks++; }
+      taskRows.push(taskRow(day.date, 'mem', null, day.mem, done, inc, false, null));
+    }
+    // Review (each as its own row)
+    for (const r of (day.rev || [])) {
+      dTotal++; totalTasks++;
+      const done = !!d.rev[r];
+      const inc  = !!d.inc[r];
+      if (done) { dDone++; doneTasks++; }
+      taskRows.push(taskRow(day.date, 'rev', r, r, done, inc, false, null));
+    }
+    // Carried
+    for (const c of (d.carried || [])) {
+      dTotal++; totalTasks++;
+      if (c.done) { dDone++; doneTasks++; }
+      taskRows.push(taskRow(day.date, c.type, null, c.label, c.done, !!c.markedInc, true, c.id));
+    }
+
+    const allDone = dTotal > 0 && dDone === dTotal;
+
+    let html = `<div class="day-head">
+      <span class="day-name">${day.day}</span>
+      <span class="day-date">${fmtDate(day.date)}</span>
+      ${isToday ? '<span class="badge badge-today">Today</span>' : ''}
+      ${allDone && dTotal > 0 ? '<span class="badge badge-done">✓ Done</span>' : ''}
+    </div>
+    <div class="day-body">
+      ${taskRows.length ? taskRows.join('') : '<span style="font-size:12px;color:var(--muted);font-style:italic;padding:3px 6px">No tasks</span>'}
+    </div>`;
+
+    const card = document.createElement('div');
+    card.className = `day-card${isToday ? ' today' : ''}${allDone && dTotal > 0 ? ' all-done' : ''}`;
+    if (isToday) card.id = 'today-card';
+    card.innerHTML = html;
+    wkEl.appendChild(card);
+
+    // Week progress
+    const wDays = SCHEDULE.slice(weekIdx*7, weekIdx*7+7);
+    let wT = 0, wD = 0;
+    wDays.forEach(wd => {
+      const wds = ds(wd.date);
+      if (wd.watch) { wT++; if (wds.watch) wD++; }
+      if (wd.mem)   { wT++; if (wds.mem)   wD++; }
+      (wd.rev||[]).forEach(r => { wT++; if (wds.rev[r]) wD++; });
+      (wds.carried||[]).forEach(c => { wT++; if (c.done) wD++; });
+    });
+    const pct = wT ? Math.round(wD/wT*100) : 0;
+    document.getElementById(`wf-${weekIdx}`).style.width = pct + '%';
+    document.getElementById(`wp-${weekIdx}`).textContent = pct + '%';
+  });
+
+  document.getElementById('s-done').textContent  = doneTasks;
+  document.getElementById('s-total').textContent = totalTasks;
+  document.getElementById('s-pct').textContent   = totalTasks ? Math.round(doneTasks/totalTasks*100)+'%' : '0%';
+
+  // Always scroll to today
+  const todayCard = document.getElementById('today-card');
+  if (todayCard) {
+    setTimeout(() => todayCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
