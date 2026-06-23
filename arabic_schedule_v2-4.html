@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arabic Learning Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* ── Dark palette ── */
+    --bg:         #0F1117;
+    --surface:    #181C27;
+    --surface2:   #1F2435;
+    --surface3:   #262D42;
+    --border:     #2C3350;
+    --border-hi:  #3A4466;
+
+    /* ── Gold ── */
+    --gold:       #D4A843;
+    --gold-dim:   #8A6A20;
+    --gold-glow:  rgba(212,168,67,0.15);
+
+    /* ── Text ── */
+    --text:       #E8EAF0;
+    --text-2:     #9BA3BA;
+    --text-3:     #5C6480;
+
+    /* ── Pill: Watch — sapphire ── */
+    --watch-bg:   #1A2D4A;
+    --watch-fg:   #6FB0F5;
+
+    /* ── Pill: Memorise — rose ── */
+    --mem-bg:     #3A1A26;
+    --mem-fg:     #F07090;
+
+    /* ── Pill: Review — jade ── */
+    --rev-bg:     #152A20;
+    --rev-fg:     #5EC48A;
+
+    /* ── State: done ── */
+    --done-bg:    #182820;
+    --done-check: #5EC48A;
+
+    /* ── State: carried ── */
+    --carry-bg:   #2A2010;
+    --carry-border:#5A4010;
+    --carry-fg:   #E09040;
+
+    /* ── State: incomplete ── */
+    --inc-border: #6A2535;
+    --inc-fill:   #C04060;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px 14px;
+    text-align: center;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  header h1 {
+    font-family: 'Amiri', serif;
+    font-size: 24px;
+    color: var(--gold);
+    letter-spacing: 0.01em;
+  }
+  header p {
+    color: var(--text-3);
+    font-size: 11px;
+    margin-top: 3px;
+    letter-spacing: 0.04em;
+  }
+  .hstats { display: flex; justify-content: center; gap: 32px; margin-top: 13px; }
+  .snum   { font-size: 22px; font-weight: 600; color: var(--gold); }
+  .slbl   { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1px; }
+
+  /* ── MAIN ── */
+  main { max-width: 700px; margin: 0 auto; padding: 20px 12px 80px; }
+
+  /* ── WEEK ── */
+  .week { margin-bottom: 28px; }
+  .wk-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .wk-lbl  {
+    font-family: 'Amiri', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--gold); white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .wk-track { flex: 1; height: 3px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+  .wk-fill  { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--done-check)); border-radius: 2px; transition: width 0.5s ease; }
+  .wk-pct   { font-size: 11px; font-weight: 600; color: var(--text-3); }
+
+  /* ── DAY CARD ── */
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .day-card.today {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold-dim), 0 4px 20px rgba(212,168,67,0.12);
+  }
+  .day-card.all-done { border-color: var(--done-check); }
+
+  .day-head {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .day-card.today .day-head {
+    background: linear-gradient(90deg, rgba(212,168,67,0.08) 0%, var(--surface2) 100%);
+  }
+  .day-name { font-weight: 600; font-size: 13px; color: var(--text); min-width: 28px; }
+  .day-date { font-size: 12px; color: var(--text-2); flex: 1; }
+
+  .badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.04em; }
+  .badge-today { background: var(--gold); color: #0F1117; }
+  .badge-done  { background: var(--done-check); color: #0F1117; }
+
+  /* ── TASK ROWS ── */
+  .day-body { padding: 7px 10px; display: flex; flex-direction: column; gap: 5px; }
+
+  .task-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    cursor: pointer; transition: background 0.12s;
+  }
+  .task-row:hover { background: var(--surface3); }
+  .task-row.done-row { background: var(--done-bg); }
+  .task-row.done-row:hover { background: var(--done-bg); filter: brightness(1.1); }
+
+  /* ── LEFT TICK (done) ── */
+  .cb-done {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; cursor: pointer;
+    border: 2px solid var(--border-hi); background: var(--surface3);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 12px; font-weight: 700; color: transparent;
+  }
+  .cb-done.on { background: var(--done-check); border-color: var(--done-check); color: #0F1117; }
+
+  /* ── LABEL ── */
+  .task-lbl { font-size: 14px; flex: 1; color: var(--text); }
+  .done-row .task-lbl { text-decoration: line-through; color: var(--text-3); }
+
+  /* ── RESET ── */
+  .reset-btn {
+    position: fixed; bottom: 16px; right: 16px;
+    background: var(--surface2); color: var(--gold);
+    border: 1px solid var(--border-hi); border-radius: 8px;
+    padding: 9px 15px; font-size: 12px;
+    font-family: 'Inter', sans-serif; cursor: pointer;
+    opacity: 0.55; transition: opacity 0.2s, border-color 0.2s;
+  }
+  .reset-btn:hover { opacity: 1; border-color: var(--gold-dim); }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 20px; }
+    .task-lbl { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AMAR Level 1 Arabic</h1>
+  <p>28 lessons · 24 Jun – 30 Jul 2026</p>
+  <div class="hstats">
+    <div><div class="snum" id="s-done">0</div><div class="slbl">Done</div></div>
+    <div><div class="snum" id="s-total">0</div><div class="slbl">Tasks</div></div>
+    <div><div class="snum" id="s-pct">0%</div><div class="slbl">Complete</div></div>
+  </div>
+</header>
+
+<main id="schedule"></main>
+
+<button class="reset-btn" onclick="resetAll()">Reset All</button>
+
+<script>
+// ── SCHEDULE ──────────────────────────────────────────────────────────────────
+// Each entry: one date, one or more lessons to do that day.
+// Lesson 1 already done (✓ in image), schedule starts 24 Jun with Lesson 2.
+const SCHEDULE = [
+  { date:"2026-06-24", day:"Wed", lessons:["Lesson 2"] },
+  { date:"2026-06-25", day:"Thu", lessons:["Lesson 2"] },
+  { date:"2026-06-26", day:"Fri", lessons:["Lesson 3"] },
+  { date:"2026-06-27", day:"Sat", lessons:["Lesson 3"] },
+  { date:"2026-06-28", day:"Sun", lessons:["Lesson 4"] },
+  { date:"2026-06-29", day:"Mon", lessons:["Lesson 5"] },
+  { date:"2026-06-30", day:"Tue", lessons:["Lesson 6"] },
+  { date:"2026-07-01", day:"Wed", lessons:["Lesson 6"] },
+  { date:"2026-07-02", day:"Thu", lessons:["Lesson 7"] },
+  { date:"2026-07-03", day:"Fri", lessons:["Lesson 7"] },
+  { date:"2026-07-04", day:"Sat", lessons:["Lesson 8"] },
+  { date:"2026-07-05", day:"Sun", lessons:["Lesson 8"] },
+  { date:"2026-07-06", day:"Mon", lessons:["Lesson 9"] },
+  { date:"2026-07-07", day:"Tue", lessons:["Lesson 10"] },
+  { date:"2026-07-08", day:"Wed", lessons:["Lesson 10"] },
+  { date:"2026-07-09", day:"Thu", lessons:["Lesson 11"] },
+  { date:"2026-07-10", day:"Fri", lessons:["Lesson 12"] },
+  { date:"2026-07-11", day:"Sat", lessons:["Lesson 12"] },
+  { date:"2026-07-12", day:"Sun", lessons:["Lesson 13"] },
+  { date:"2026-07-13", day:"Mon", lessons:["Lesson 13"] },
+  { date:"2026-07-14", day:"Tue", lessons:["Lesson 14"] },
+  { date:"2026-07-15", day:"Wed", lessons:["Lesson 14"] },
+  { date:"2026-07-16", day:"Thu", lessons:["Lesson 15"] },
+  { date:"2026-07-17", day:"Fri", lessons:["Lesson 16"] },
+  { date:"2026-07-18", day:"Sat", lessons:["Lesson 16"] },
+  { date:"2026-07-19", day:"Sun", lessons:["Lesson 17"] },
+  { date:"2026-07-20", day:"Mon", lessons:["Lesson 17"] },
+  { date:"2026-07-21", day:"Tue", lessons:["Lesson 18"] },
+  { date:"2026-07-22", day:"Wed", lessons:["Lesson 19"] },
+  { date:"2026-07-23", day:"Thu", lessons:["Lesson 20"] },
+  { date:"2026-07-24", day:"Fri", lessons:["Lesson 20"] },
+  { date:"2026-07-25", day:"Sat", lessons:["Lesson 21"] },
+  { date:"2026-07-26", day:"Sun", lessons:["Lesson 22"] },
+  { date:"2026-07-27", day:"Mon", lessons:["Lesson 23"] },
+  { date:"2026-07-28", day:"Tue", lessons:["Lesson 24"] },
+  { date:"2026-07-29", day:"Wed", lessons:["Lesson 25"] },
+  { date:"2026-07-30", day:"Thu", lessons:["Lesson 26"] },
+  { date:"2026-07-31", day:"Fri", lessons:["Lesson 26"] },
+];
+
+// Week groupings by date range
+const WEEKS = [
+  { label:"Week 1 — 24–30 Jun", dates:["2026-06-24","2026-06-25","2026-06-26","2026-06-27","2026-06-28","2026-06-29","2026-06-30"] },
+  { label:"Week 2 — 1–7 Jul",   dates:["2026-07-01","2026-07-02","2026-07-03","2026-07-04","2026-07-05","2026-07-06","2026-07-07"] },
+  { label:"Week 3 — 8–14 Jul",  dates:["2026-07-08","2026-07-09","2026-07-10","2026-07-11","2026-07-12","2026-07-13","2026-07-14"] },
+  { label:"Week 4 — 15–21 Jul", dates:["2026-07-15","2026-07-16","2026-07-17","2026-07-18","2026-07-19","2026-07-20","2026-07-21"] },
+  { label:"Week 5 — 22–31 Jul", dates:["2026-07-22","2026-07-23","2026-07-24","2026-07-25","2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31"] },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+// state[date] = { lessons: { "Lesson 2": bool, ... } }
+const KEY = "arabic_v5";
+let state = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })();
+const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+
+function ds(date) {
+  if (!state[date]) state[date] = { lessons: {} };
+  if (!state[date].lessons) state[date].lessons = {};
+  return state[date];
+}
+
+function todayStr() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+}
+
+function fmtDate(d) {
+  const [y,m,dd] = d.split('-').map(Number);
+  return new Date(y, m-1, dd).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function toggleLesson(date, lesson) {
+  const d = ds(date);
+  d.lessons[lesson] = !d.lessons[lesson];
+  save(); render();
+}
+
+function resetAll() {
+  if (!confirm("Reset all progress?")) return;
+  state = {}; save(); render();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const now = todayStr();
+  const wrap = document.getElementById('schedule');
+  wrap.innerHTML = '';
+
+  let totalTasks = 0, doneTasks = 0;
+
+  // Build a map of date → schedule entry
+  const dayMap = {};
+  SCHEDULE.forEach(e => dayMap[e.date] = e);
+
+  WEEKS.forEach((week, wi) => {
+    // Only include dates that have a schedule entry
+    const activeDates = week.dates.filter(d => dayMap[d]);
+    if (!activeDates.length) return;
+
+    // Week progress
+    let wT = 0, wD = 0;
+    activeDates.forEach(date => {
+      const entry = dayMap[date];
+      const d = ds(date);
+      entry.lessons.forEach(l => { wT++; if (d.lessons[l]) wD++; });
+    });
+    const pct = wT ? Math.round(wD / wT * 100) : 0;
+
+    const wkDiv = document.createElement('div');
+    wkDiv.className = 'week';
+    wkDiv.innerHTML = `<div class="wk-head">
+      <span class="wk-lbl">${week.label}</span>
+      <div class="wk-track"><div class="wk-fill" style="width:${pct}%"></div></div>
+      <span class="wk-pct">${pct}%</span>
+    </div>`;
+    wrap.appendChild(wkDiv);
+
+    activeDates.forEach(date => {
+      const entry = dayMap[date];
+      const d = ds(date);
+      const isToday = date === now;
+
+      let dTotal = 0, dDone = 0;
+      const rows = entry.lessons.map(lesson => {
+        dTotal++; totalTasks++;
+        const done = !!d.lessons[lesson];
+        if (done) { dDone++; doneTasks++; }
+        return `<div class="task-row ${done ? 'done-row' : ''}" onclick="toggleLesson('${date}','${lesson}')">
+          <div class="cb-done ${done ? 'on' : ''}">✓</div>
+          <span class="task-lbl">${lesson}</span>
+        </div>`;
+      });
+
+      const allDone = dTotal > 0 && dDone === dTotal;
+
+      const card = document.createElement('div');
+      card.className = `day-card${isToday ? ' today' : ''}${allDone ? ' all-done' : ''}`;
+      if (isToday) card.id = 'today-card';
+      card.innerHTML = `
+        <div class="day-head">
+          <span class="day-name">${entry.day}</span>
+          <span class="day-date">${fmtDate(date)}</span>
+          ${isToday ? '<span class="badge badge-today">Today</span>' : ''}
+          ${allDone ? '<span class="badge badge-done">✓ Done</span>' : ''}
+        </div>
+        <div class="day-body">${rows.join('')}</div>`;
+      wkDiv.appendChild(card);
+    });
+  });
+
+  document.getElementById('s-done').textContent  = doneTasks;
+  document.getElementById('s-total').textContent = totalTasks;
+  document.getElementById('s-pct').textContent   = totalTasks ? Math.round(doneTasks/totalTasks*100)+'%' : '0%';
+
+  const todayCard = document.getElementById('today-card');
+  if (todayCard) {
+    setTimeout(() => todayCard.scrollIntoView({ behavior: 'instant', block: 'center' }), 0);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
